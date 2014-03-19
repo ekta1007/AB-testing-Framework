@@ -1,8 +1,14 @@
 # Ekta Grover, 19-03-2014
-#Adapted from the php code here - http://www.abtester.com/calculator/
+# min sample size constrainst, confidence 
+# Resources -:
+# http://resources.esri.com/help/9.3/arcgisdesktop/com/gp_toolref/spatial_statistics_toolbox/what_is_a_z_score_what_is_a_p_value.htm
+# http://www.abtester.com/calculator/
+#https://developer.amazon.com/sdk/ab-testing/reference/ab-math.html
+# TO DO - Add vars & other repostig metrics 
 
 import math
-perform=[[182,35],[180, 45],[189, 28],[188, 61]]
+#perform=[[182,35],[180, 45],[189, 28],[188, 61]]
+perform = [[1064,320],[1043,250]]
 def convert(perform):
     return float(perform[1])/float(perform[0])
 
@@ -36,10 +42,26 @@ def ssize(conv):
         res.append((int) ((1-conv)*a/(b*conv)))
     return res
 
+def conversion_range(conv,perform,m):
+   s=math.sqrt((conv*(1-conv))/perform[m][0])
+   return conv+(1.65*s), conv-(1.65*s)
+
+#(1-cumnormdist(zscore(perform,1)))*100 
+def changepercent(perform,m) : # will always compare against control group # (Target - CG)/CG
+   return ((convert(perform[m])-convert(perform[0]))/convert(perform[0]))
+
 # Calling the performance benchmarks 
-print "%s %s %s %s " %("Conversion Rate","Z-Score".rjust(15),"Confidence".rjust(13),"Sample-Size".rjust(10))
+print "%s %s %s %s %s %s" %("Conversion Rate","Z-Score".rjust(15),"Confidence".rjust(13),"Sample-Size".rjust(10),"Percentage Change" , "Conversion Range" )
 for i in range(0,len(perform)):
-   if i ==0 :
-      print "%s %s " %((str(convert(perform[i])*100)+str('%')),str(ssize(convert(perform[i]))).rjust(40))
-   if i >0:
-      print  str(convert(perform[i])*100)+str('%'), zscore(perform,i),str(cumnormdist(zscore(perform,i))*100)+str('%') , ssize(convert(perform[i]))
+    if i ==0 :
+        print "%s %s %s %s" %((str(convert(perform[i])*100)+str('%')),str(ssize(convert(perform[i]))).rjust(40),str(changepercent(perform,i)),str(conversion_range(convert(perform[i]),perform,i)))
+    elif i >0:
+        print  str(convert(perform[i])*100)+str('%'), zscore(perform,i),str(cumnormdist(zscore(perform,i))*100)+str('%') , ssize(convert(perform[i])),changepercent(perform,i),conversion_range(convert(perform[i]),perform,i)
+      
+    #conversion_range(convert(perform[i]),perform,i) # applies to both    
+
+  
+
+# Start from here, Feb 20th - add variance calculations 
+import scipy 
+#p_values = scipy.stats.norm.sf(z_scores)*2 #twosided
